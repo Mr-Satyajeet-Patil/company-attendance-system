@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Face</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        video {
+            width: 640px;
+            max-width: 90%;
+            border: 2px solid #333;
+            border-radius: 10px;
+        }
+
+        canvas {
+            display: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Face Registration</h1>
+
+<h2>{{ employee.name }}</h2>
+
+<p>
+    Employee ID: {{ employee.employee_id }}
+</p>
+
+<video id="video" autoplay playsinline></video>
+
+<br>
+
+<button type="button" id="startCamera">
+    Start Camera
+</button>
+
+<button type="button" id="capture">
+    Capture Face
+</button>
+
+<canvas id="canvas"></canvas>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input
+        type="file"
+        name="face_image"
+        id="faceImage"
+        accept="image/*"
+        hidden
+    >
+
+    <br>
+
+    <button type="submit">
+        Save Face
+    </button>
+</form>
+
+<p id="message"></p>
+
+<script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const startCamera = document.getElementById("startCamera");
+    const capture = document.getElementById("capture");
+    const faceImage = document.getElementById("faceImage");
+    const message = document.getElementById("message");
+
+    let stream = null;
+
+    startCamera.addEventListener("click", async () => {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+            });
+
+            video.srcObject = stream;
+
+            message.textContent = "Camera started.";
+        } catch (error) {
+            console.error(error);
+
+            message.textContent =
+                "Unable to access camera. Please allow camera permission.";
+        }
+    });
+
+    capture.addEventListener("click", () => {
+
+        if (!stream) {
+            message.textContent = "Start the camera first.";
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const context = canvas.getContext("2d");
+
+        context.drawImage(
+            video,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        canvas.toBlob((blob) => {
+
+            const file = new File(
+                [blob],
+                "face.jpg",
+                {
+                    type: "image/jpeg"
+                }
+            );
+
+            const dataTransfer = new DataTransfer();
+
+            dataTransfer.items.add(file);
+
+            faceImage.files = dataTransfer.files;
+
+            message.textContent =
+                "Face captured successfully. Click Save Face.";
+
+        }, "image/jpeg");
+    });
+</script>
+
+</body>
+</html>

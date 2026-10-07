@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mark Attendance</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        video {
+            width: 640px;
+            max-width: 90%;
+            border: 2px solid #333;
+            border-radius: 10px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Face Attendance</h1>
+
+    <video id="video" autoplay playsinline></video>
+
+    <br>
+
+    <button type="button" id="startCamera">
+        Start Camera
+    </button>
+
+    <button type="button" id="markAttendance">
+        Mark Attendance
+    </button>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <p id="message"></p>
+
+    <form id="csrfForm">
+        {% csrf_token %}
+    </form>
+
+    <script>
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        const message = document.getElementById("message");
+
+        let stream = null;
+
+        // START CAMERA
+        document.getElementById("startCamera").addEventListener("click", async function () {
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+
+                video.srcObject = stream;
+
+                message.innerText = "Camera started. Look at the camera.";
+
+            } catch (error) {
+
+                console.error("Camera error:", error);
+
+                message.innerText =
+                    "Camera access failed: " + error.message;
+            }
+        });
+
+
+        // MARK ATTENDANCE
+        document.getElementById("markAttendance").addEventListener("click", async function () {
+
+            console.log("Mark Attendance button clicked");
+
+            if (!stream) {
+                message.innerText = "Please start the camera first.";
+                return;
+            }
+
+            message.innerText = "Capturing face...";
+
+            // Set canvas size
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Capture current video frame
+            const context = canvas.getContext("2d");
+
+            context.drawImage(
+                video,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            // Convert image to Blob
+            canvas.toBlob(async function(blob) {
+
+                if (!blob) {
+                    message.innerText = "Failed to capture image.";
+                    return;
+                }
+
+                console.log("Image captured successfully");
+
+                // Create FormData
+                const formData = new FormData();
+
+                formData.append(
+                    "face_image",
+                    blob,
+                    "attendance.jpg"
+                );
+
+                // Get CSRF token
+                const csrfToken = document.querySelector(
+                    "[name=csrfmiddlewaretoken]"
+                ).value;
+
+                try {
+
+                    message.innerText =
+                        "Recognizing face... Please wait.";
+
+                    const response = await fetch(
+                        "{% url 'mark_attendance' %}",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "X-CSRFToken": csrfToken
+                            },
+
+                            body: formData
+                        }
+                    );
+
+                    console.log(
+                        "Server response status:",
+                        response.status
+                    );
+
+                    const data = await response.json();
+
+                    console.log("Server response:", data);
+
+                    message.innerText = data.message;
+
+                } catch (error) {
+
+                    console.error(
+                        "Attendance error:",
+                        error
+                    );
+
+                    message.innerText =
+                        "Error while marking attendance: " +
+                        error.message;
+                }
+
+            }, "image/jpeg");
+
+        });
+    </script>
+
+</body>
+</html>

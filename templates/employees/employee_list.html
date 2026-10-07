@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employees</title>
+</head>
+
+<body>
+
+<h1>Employees</h1>
+
+<a href="/admin/employees/employee/add/">
+    <button>Add Employee</button>
+</a>
+
+<hr>
+
+{% for employee in employees %}
+
+<div>
+    <h3>{{ employee.name }}</h3>
+
+    <p><strong>Employee ID:</strong> {{ employee.employee_id }}</p>
+    <p><strong>Email:</strong> {{ employee.email }}</p>
+    <p><strong>Department:</strong> {{ employee.department }}</p>
+    <p><strong>Designation:</strong> {{ employee.designation }}</p>
+
+    {% if employee.face_image %}
+        <img src="{{ employee.face_image.url }}"
+             width="150"
+             height="150"
+             alt="{{ employee.name }}">
+
+        <p>✅ Face registered</p>
+    {% else %}
+        <p>❌ Face not registered</p>
+
+        <a href="{% url 'register_face' employee.id %}">
+            <button>Register Face</button>
+        </a>
+    {% endif %}
+
+</div>
+
+<hr>
+
+{% empty %}
+
+<p>No employees found.</p>
+
+{% endfor %}
+
+</body>
+</html>
