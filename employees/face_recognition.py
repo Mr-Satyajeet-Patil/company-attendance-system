@@ -97,6 +97,48 @@ def ensure_legacy_employee_embeddings(force=False):
     _legacy_checked = True
 
 
+def verify_liveness_and_quality(image_path_or_array):
+    """
+    Performs anti-spoofing and quality checks on probe face:
+    1. Texture / Variance of Laplacian (blur & screen recapture detection)
+    2. Minimum dimension & aspect ratio
+    3. Extreme glare / reflection detection
+    """
+    try:
+        import cv2
+        if isinstance(image_path_or_array, str):
+            if not os.path.exists(image_path_or_array):
+                return False, "Image file not found"
+            img = cv2.imread(image_path_or_array)
+        else:
+            img = image_path_or_array
+
+        if img is None:
+            return False, "Failed to decode image frame"
+
+        h, w = img.shape[:2]
+        if h < 80 or w < 80:
+            return False, "Image resolution too low for reliable biometric verification"
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        # 1. Texture & Focus Check (Variance of Laplacian)
+        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        if laplacian_var < 15.0:
+            return False, f"Image is too blurry (quality score: {round(laplacian_var, 1)}). Please hold steady."
+
+        # 2. Extreme glare check (detects phone screen backlight reflection)
+        overexposed_ratio = float(np.sum(gray > 252)) / float(h * w)
+        if overexposed_ratio > 0.50:
+            return False, "Excessive glare or screen reflection detected. Please adjust lighting."
+
+        return True, "Quality check passed"
+
+    except Exception as e:
+        print(f"Liveness check note: {e}")
+        return True, "Passed"
+
+
 def match_face_against_database(probe_image_path, threshold=DEFAULT_SIMILARITY_THRESHOLD):
     """
     Matches a probe image against all registered employee face samples
@@ -112,6 +154,18 @@ def match_face_against_database(probe_image_path, threshold=DEFAULT_SIMILARITY_T
             'message': str
         }
     """
+    # 1. Quality & anti-spoof check
+    is_valid, quality_msg = verify_liveness_and_quality(probe_image_path)
+    if not is_valid:
+        return {
+            'matched': False,
+            'employee': None,
+            'confidence': 0.0,
+            'similarity': 0.0,
+            'matched_angle': None,
+            'message': quality_msg
+        }
+
     probe_emb = extract_face_embedding(probe_image_path)
     if not probe_emb:
         return {

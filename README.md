@@ -1,130 +1,145 @@
 # ⚡ PulseAttend 360™ AI
-### Next-Generation Multi-Angle Facial Biometric Attendance & Workforce Management Platform
+### Enterprise Multi-Angle Facial Biometric Attendance & Workforce Management Platform
 
-**PulseAttend 360 AI** is an enterprise-grade biometric workforce intelligence platform built with **Django REST**, **DeepFace (Facenet512)**, **OpenCV**, and a sleek **React 19 + Tailwind CSS** frontend.
+[![CI Pipeline](https://github.com/Mr-Satyajeet-Patil/company-attendance-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Mr-Satyajeet-Patil/company-attendance-system/actions/workflows/ci.yml)
+[![Django](https://img.shields.io/badge/Django-6.1-green.svg)](https://www.djangoproject.com/)
+[![React](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-v4-38bdf8.svg)](https://tailwindcss.com/)
+[![DeepFace](https://img.shields.io/badge/DeepFace-Facenet512-orange.svg)](https://github.com/serengil/deepface)
 
-Unlike traditional single-photo attendance trackers that suffer from low accuracy due to lighting and head pose variations, **PulseAttend 360 AI** captures **3 to 4 multi-angle facial embeddings** per employee (Frontal, Left Profile, Right Profile, Natural Expression). During recognition, it performs vectorized cosine similarity matching against the multi-shot ensemble in sub-second time, achieving **>99.2% verification accuracy**.
+**PulseAttend 360 AI** is an enterprise-grade attendance and biometric workforce management platform. It integrates a **Django REST backend** powered by **DeepFace (Facenet-512)** and **OpenCV** with a cybernetic **React 19 + Tailwind CSS** frontend.
+
+Traditional single-image attendance systems often suffer from high false-rejection rates due to slight head pose, expression, or lighting variations. **PulseAttend 360 AI** solves this by capturing a **4-angle biometric enrollment ensemble** (Frontal, Left ~15°, Right ~15°, Natural Expression) and evaluating live camera probes against normalized 512-dimensional vector embeddings in sub-second time.
 
 ---
 
-## 🌟 Key Features
+## 🌟 Architecture & Key Features
 
-### 1. 📷 Multi-Angle 360° Face Registration (High Accuracy)
-- Guided 4-step biometric registration wizard:
-  1. **Frontal Center** (baseline neutral)
-  2. **Slight Left Angle (~15°)** (jawline & left profile)
-  3. **Slight Right Angle (~15°)** (cheekbone & right profile)
-  4. **Natural Expression / Smile** (dynamic feature variance)
-- Real-time Facenet-512 vector extraction (512-dimensional normalized embeddings stored in database).
-- Vectorized ensemble matching across all sample representations with zero latency.
+### 1. 📷 Multi-Angle Facial Biometrics & Anti-Spoofing
+* **4-Step Guided Enrollment Wizard:**
+  1. **Frontal Center:** Baseline neutral head pose.
+  2. **Slight Left (~15°):** Left orbital and jawline geometry.
+  3. **Slight Right (~15°):** Right cheekbone and contour profile.
+  4. **Natural Expression / Smile:** Dynamic facial muscle variance.
+* **Vectorized Cosine Similarity:** Each angle is pre-processed into a 512-dimensional $L_2$-normalized vector stored as a JSON array (`EmployeeFaceSample`). Matching executes via matrix dot products in NumPy ($< 1$ms).
+* **Anti-Spoofing & Quality Gate:**
+  * **Variance of Laplacian:** Rejects severely blurred inputs and flat digital phone screen recaptures (texture variance score $< 15$).
+  * **Glare / Specular Reflection Detector:** Flags excessive backlight clipping common in smartphone replay attacks.
+  * **Liveness Recommendation:** In critical corporate perimeter security, pairing this software with active blink challenges or IR depth hardware is recommended.
 
 ### 2. 🖥️ Live Biometric Kiosk Terminal
-- Real-time webcam feed with **cybernetic HUD overlay**, animated scanning beam, and oval face guides.
-- **Auto-Punch mode** (hands-free touchless scanning every 4 seconds) or **Manual Punch**.
-- **Real-Time Web Audio API Sound Feedback**:
-  - Rising harmonic chime on Check-In.
-  - Gentle melodic tone on Check-Out.
-  - Subtle alert beep on unrecognized face.
-- Instant match popup card with Employee ID, photo, department, check-in/out timestamp, work duration, and biometric confidence score.
+* **Cybernetic HUD Overlay:** Real-time webcam viewfinder with face target brackets, animated light beam, and visual guidance.
+* **Touchless Auto-Scan Mode:** Automatically scans every 4 seconds with a **6-second throttle** and a **90-second debounce cooldown** to prevent duplicate checkout punches.
+* **Web Audio API Synthesizer:** Real-time audio chimes for Check-In (harmonic rising chord), Check-Out (gentle chord), and alerts (warning beep).
+* **Instant Verification Card:** Displays employee photo, ID, timestamp, calculated working duration, and match confidence percentage.
 
-### 3. 🏢 Complete Enterprise Workforce Management
-- **Automated Work Hours & Overtime Calculation**:
-  - First punch = Check-In.
-  - Second punch = Check-Out.
-  - Automatically calculates total hours, punctuality status, and overtime past 8 hours.
-- **Smart Punctuality Engine**:
-  - Configurable shift start time (e.g. 09:00 AM) and grace period (15 mins).
-  - Automatically flags **Present**, **Late**, **Half-Day** (< 4.0 hrs), or **Absent**.
-- **Employee Directory**:
-  - Full CRUD operations, department filters, search, and active/inactive toggles.
-  - Biometric accuracy status badge (4/4 High Accuracy vs 1/4 Basic).
-- **Attendance Records & Audit Timesheets**:
-  - Filter by date range, department, employee ID, and status.
-  - Manual Attendance Override / Correction modal for HR.
-  - **1-Click CSV Export** for payroll integration.
-- **Leave & Time-Off Management**:
-  - Casual Leave, Sick Leave, Paid Leave, and Work From Home (WFH).
-  - Approval/Rejection workflow for managers.
-- **Biometric Sensitivity & Shift Settings**:
-  - Adjustable cosine similarity threshold slider (default 0.68).
-  - Configurable morning grace period and standard work hours.
+### 3. 🏢 Real-World Workforce Management
+* **Smart Punctuality Engine:**
+  * Configurable shift schedules and morning grace period (defaults to 15 minutes).
+  * Automatic status assignment: `Present`, `Late`, `Half-Day` ($< 4.0$ hrs), or `Absent`.
+  * Automatic overtime calculation for hours worked beyond the 8.0-hour threshold.
+* **Employee Directory:** Search, department filtering, profile editing, and biometric calibration.
+* **Timesheets & Audit Logs:** Date range filtering, manual HR punch adjustments with audit notes, and 1-click **CSV Export**.
+* **Leave Management:** Support for Casual, Sick, Paid, and WFH leaves with manager approval/rejection workflows.
+* **WhiteNoise Static Serving:** Production-ready asset compression and cache headers.
 
 ---
 
-## 🏗️ Architecture
+## 🔒 Security & Production Hardening
 
-```
-attendance_system/
-├── attendance/                 # Attendance engine & REST APIs
-│   ├── models.py               # Attendance, LeaveRequest, SystemSetting
-│   ├── views.py                # Kiosk punch, Dashboard KPIs, Timesheet APIs, CSV export
-│   └── urls.py                 # API routing
-├── employees/                  # Employee directory & Face AI
-│   ├── models.py               # Employee, Shift, EmployeeFaceSample (512-dim JSON embedding)
-│   ├── face_recognition.py     # Multi-angle Facenet512 ensemble matcher & vector normalizer
-│   ├── views.py                # Employee CRUD & multi-shot face registration
-│   └── urls.py                 # Employee API routes
-├── config/                     # Django core settings & URL dispatch
-│   ├── settings.py             # CORS, media, app registry
-│   └── urls.py                 # Unified router serving React SPA & REST APIs
-├── frontend/                   # React 19 + Tailwind CSS + Lucide Application
-│   ├── src/
-│   │   ├── components/         # Sidebar, Header
-│   │   ├── views/              # KioskView, DashboardView, EmployeesView, MultiPhotoRegisterModal, AttendanceView, LeavesView, SettingsView
-│   │   ├── utils/              # audio.ts (Web Audio synthesizer chimes)
-│   │   ├── api.ts              # REST client
-│   │   └── types.ts            # TypeScript interfaces
-│   └── dist/                   # Production compiled React bundle (served directly by Django)
-├── media/                      # Employee photos and biometric samples
-├── start_app.bat               # 1-Click launcher
-└── start_dev.bat               # Hot-reload full-stack development launcher
-```
+* **Environment Variable Isolation:** Secrets and environment settings are loaded through `.env` (`.env.example` included).
+* **Host & CORS Restrictions:** When `DJANGO_DEBUG=False`, hosts and CORS origins are strictly locked down via `DJANGO_ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS`.
+* **Configurable Timezone:** Defaults to `Asia/Kolkata` (`DJANGO_TIME_ZONE`) to prevent date discrepancies across midnight punch shifts.
+* **Database Agnostic:** Runs on SQLite locally, switches to PostgreSQL automatically when `DATABASE_URL` is provided.
+* **Biometric Privacy:** Biometric templates are stored as irreversibly hashed/embedded 512-dim vectors rather than raw facial recognition models. Supports both soft-deactivation and permanent record deletion (`?permanent=true`).
 
 ---
 
-## 🚀 Quick Start Guide
+## 🧪 Automated Testing & CI Pipeline
 
-### Method 1: Single Command Launch (Recommended)
-Double-click `start_app.bat` or run:
+The project includes **19 automated unit and API integration tests** that run on an isolated, in-memory database without needing a running server or leaving residue:
+
 ```bash
-python manage.py runserver 0.0.0.0:8000
+python manage.py test
 ```
-Open your browser to:
-👉 **http://127.0.0.1:8000/**
 
-*Django automatically serves the production-compiled React frontend SPA and all REST APIs together!*
+### GitHub Actions CI Workflow
+Every push to `main` executes `.github/workflows/ci.yml`:
+1. Installs Python 3.12 and dependencies.
+2. Validates Django system configuration (`python manage.py check`).
+3. Executes all 19 automated unit tests (`python manage.py test`).
+4. Verifies the React 19 production build (`npm run build`).
 
-### Method 2: Development Mode (with React Vite Hot-Reloading)
-Double-click `start_dev.bat` or run:
+---
+
+## 🚀 Deployment Guide
+
+### Architecture Overview
+
+```
+               ┌────────────────────────────────────────────────────────┐
+               │                     User Browser                       │
+               └───────────────────┬────────────────┬───────────────────┘
+                                   │                │
+            Frontend Requests      │                │ API & Biometric Probes
+            (HTML / JS / CSS)      ▼                ▼ (/api/*)
+               ┌───────────────────────┐        ┌───────────────────────┐
+               │    Vercel Edge CDN    │        │  Render / Railway App │
+               │ (React 19 Production) │        │ (Django REST + AI WSGI│
+               └───────────────────────┘        └───────────┬───────────┘
+                                                            │
+                                                            ▼
+                                                ┌───────────────────────┐
+                                                │ PostgreSQL & Storage  │
+                                                └───────────────────────┘
+```
+
+### 1. Deploying the React Frontend on Vercel
+1. Push your code to GitHub.
+2. Import the repository in **Vercel**.
+3. Vercel automatically detects [`vercel.json`](./vercel.json) and builds `frontend/dist`.
+4. In Vercel Project Settings ➔ **Environment Variables**, set:
+   ```env
+   VITE_API_URL=https://your-backend-api.onrender.com
+   ```
+
+### 2. Deploying the Django + AI Backend on Render / Railway
+Because **TensorFlow (~550 MB)** and **DeepFace** exceed Vercel's 250 MB serverless function limit, the Python backend runs as a containerized web service:
+1. Connect your GitHub repository to **[Render.com](https://render.com/)** or **Railway**.
+2. Select **Web Service** with Python 3.12.
+3. Set the build and start commands:
+   * **Build Command:** `pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput`
+   * **Start Command:** `gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`
+4. Configure environment variables from `.env.example` (set `DJANGO_DEBUG=False`, `DJANGO_SECRET_KEY`, and `CORS_ALLOWED_ORIGINS`).
+
+---
+
+## 💻 Local Development Setup
+
+### Prerequisites
+* Python 3.12+
+* Node.js 20+
+
+### Option A: Unified Local Run (Single Command)
 ```bash
-# Terminal 1 - Backend
+# 1. Activate Virtual Environment
+.\venv\Scripts\activate
+
+# 2. Run Database Migrations
+python manage.py migrate
+
+# 3. Start Server
+python manage.py runserver 127.0.0.1:8000
+```
+Open your browser at: **http://127.0.0.1:8000/**
+
+### Option B: Frontend Hot-Reload Development
+```bash
+# Terminal 1: Backend
 python manage.py runserver 8000
 
-# Terminal 2 - Frontend
+# Terminal 2: React Dev Server
 cd frontend
 npm run dev
 ```
-Open your browser to:
-👉 **http://localhost:5173/**
-
----
-
-## 📡 Key REST API Endpoints
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/kiosk/punch/` | POST | Live biometric punch with face image (multipart or base64) |
-| `/api/dashboard/stats/` | GET | Real-time KPI summary, 7-day trend & department presence |
-| `/employees/api/list/` | GET / POST | List employees with filters or create a new employee |
-| `/employees/api/<id>/register-faces/` | POST | Register 3-4 multi-angle biometric photos |
-| `/api/records/` | GET / POST | Fetch attendance timesheets or submit manual override |
-| `/api/leaves/` | GET / POST / PATCH | Leave application & approval workflow |
-| `/api/export/csv/` | GET | Download complete attendance CSV report |
-| `/api/settings/` | GET / POST | Manage facial similarity threshold & shift settings |
-
----
-
-## 🛡️ Biometric Security Notes
-- Embeddings are generated using **Facenet512** which maps faces to a 512-dimensional hypersphere.
-- Cosine distance metric: $D_C(u, v) = 1 - \frac{u \cdot v}{\|u\|_2 \|v\|_2}$.
-- Threshold $\ge 0.68$ similarity ($\le 0.32$ distance) ensures enterprise-grade security against spoofing and misidentification.
+Open your browser at: **http://localhost:5173/**
