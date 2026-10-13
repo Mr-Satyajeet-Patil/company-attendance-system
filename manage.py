@@ -3,6 +3,16 @@
 import os
 import sys
 
+# Ensure UTF-8 output on Windows to prevent UnicodeEncodeError in deepface / third-party loggers
+if sys.platform == 'win32':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    os.environ['PYTHONUTF8'] = '1'
+
 
 def main():
     """Run administrative tasks."""

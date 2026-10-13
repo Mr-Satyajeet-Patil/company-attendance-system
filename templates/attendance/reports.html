@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Reports</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f4f6f9;
+            color: #222;
+        }
+        nav { margin-bottom: 20px; }
+        nav a { margin-right: 14px; color: #2457a7; text-decoration: none; }
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .card, .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+        .number { font-size: 28px; font-weight: bold; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #e9eef7; }
+    </style>
+</head>
+<body>
+    <h1>Attendance Reports</h1>
+
+    <nav>
+        <a href="{% url 'attendance_dashboard' %}">Dashboard</a>
+        <a href="{% url 'employee_list' %}">Employees</a>
+        <a href="{% url 'mark_attendance_page' %}">Mark Attendance</a>
+        <a href="{% url 'attendance_history' %}">Attendance History</a>
+        <a href="/admin/">Admin</a>
+    </nav>
+
+    <p>Monthly summary for {{ today|date:"F Y" }}</p>
+
+    <div class="cards">
+        <div class="card">
+            <p>Present Records</p>
+            <div class="number">{{ present_count }}</div>
+        </div>
+        <div class="card">
+            <p>Late Records</p>
+            <div class="number">{{ late_count }}</div>
+        </div>
+        <div class="card">
+            <p>Absent Records</p>
+            <div class="number">{{ absent_count }}</div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>Employee-wise Summary</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Present Days</th>
+                        <th>Late Days</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employee_summary %}
+                    <tr>
+                        <td>{{ employee.employee_id }}</td>
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.department }}</td>
+                        <td>{{ employee.present_days }}</td>
+                        <td>{{ employee.late_days }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No active employees found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
